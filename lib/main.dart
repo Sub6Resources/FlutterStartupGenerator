@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:english_words/english_words.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() => runApp(MyApp());
 
@@ -24,9 +27,11 @@ class RandomWords extends StatefulWidget {
 class RandomWordsState extends State<RandomWords> {
   final _suggestions = <WordPair>[];
 
-  final _saved = Set<WordPair>();
+  final _saved = Set<String>();
 
   final _biggerFont = const TextStyle(fontSize: 18.0);
+
+  final Future<SharedPreferences> _sharedPreferences = SharedPreferences.getInstance();
 
   @override
   Widget build(BuildContext context) {
@@ -39,6 +44,21 @@ class RandomWordsState extends State<RandomWords> {
       ),
       body: _buildSuggestions(),
     );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  void _loadData() async {
+    List<String> _oldData = await _sharedPreferences.then((SharedPreferences prefs) {
+      return (prefs.getStringList('_saved')) ?? List<String>();
+    });
+    setState(() {
+      _saved.addAll(_oldData);
+    });
   }
 
   Widget _buildSuggestions() {
@@ -56,7 +76,7 @@ class RandomWordsState extends State<RandomWords> {
   }
 
   Widget _buildRow(WordPair pair) {
-    final alreadySaved = _saved.contains(pair);
+    final alreadySaved = _saved.contains(pair.asPascalCase);
 
     return ListTile(
         title: Text(
@@ -71,14 +91,21 @@ class RandomWordsState extends State<RandomWords> {
           onPressed: () {
             setState(() {
               if (alreadySaved) {
-                _saved.remove(pair);
+                _saved.remove(pair.asPascalCase);
               } else {
-                _saved.add(pair);
+                _saved.add(pair.asPascalCase);
               }
+              _saveSaved();
             });
+
           }
         ),
     );
+  }
+
+  void _saveSaved() async {
+    SharedPreferences sharedPreferences = await _sharedPreferences;
+    sharedPreferences.setStringList("_saved", _saved.toList());
   }
 
   void _pushSaved() {
@@ -89,7 +116,7 @@ class RandomWordsState extends State<RandomWords> {
                 (pair) {
               return ListTile(
                 title: Text(
-                  pair.asPascalCase,
+                  pair,
                   style: _biggerFont,
                 ),
               );

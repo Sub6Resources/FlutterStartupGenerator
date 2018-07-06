@@ -1,8 +1,3 @@
-# startup_namer
+# My Startup Namer
 
-Following that tutorial...
-
-## Getting Started
-
-For help getting started with Flutter, view our online
-[documentation](https://flutter.io/).
+Followed the Flutter tutorial and then added data persistence 
